@@ -1,0 +1,92 @@
+/*1.	Вивести значення наступних колонок: назва книги, ціна, назва видавництва. Використовувати внутрішнє з'єднання, застосовуючи where.*/
+SELECT * FROM library_table_new;
+/*
+SELECT library_table_new.name, library_table_new.price, publishers.publisher_name FROM 
+library_table_new, publishers WHERE 
+library_table_new.publisher_id= publishers.id;
+
+/*Вивести значення наступних колонок: назва книги, назва категорії. Використовувати внутрішнє з'єднання, застосовуючи inner join.*/
+SELECT library_table_new.name, categories.category_name FROM
+library_table_new INNER JOIN categories
+ON library_table_new.category_id = categories.id;
+
+/* Вивести значення наступних колонок: назва книги, ціна, назва видавництва, формат.*/
+SELECT library_table_new.name, library_table_new.price, publishers.publisher_name, forms.book_form 
+FROM library_table_new INNER JOIN publishers INNER JOIN forms
+ON library_table_new.publisher_id= publishers.id AND library_table_new.form_id= forms.id;
+
+/*Вивести значення наступних колонок: тема, категорія, назва книги, назва видавництва. Фільтр по темам і категоріям.*/
+SELECT topics.topic_name, categories.category_name, library_table_new.name, publishers.publisher_name FROM 
+topics INNER JOIN categories INNER JOIN library_table_new INNER JOIN publishers 
+ON library_table_new.topic_id = topics.id AND library_table_new.category_id= categories.id AND library_table_new.publisher_id = publishers.id ORDER BY topics.topic_name, categories.category_name; 
+
+/*Вивести книги видавництва 'BHV', видані після 2000 р*/
+SELECT library_table_new.name, publishers.publisher_name FROM library_table_new INNER JOIN publishers ON library_table_new.publisher_id= publishers.id WHERE publishers.id=3 AND YEAR(library_table_new.publish_date) >= 2000; 
+*/
+/*Вивести загальну кількість сторінок по кожній назві категорії. Фільтр по спадаючій кількості сторінок.*/
+SELECT SUM(library_table_new.pages) AS sum_page, categories.category_name FROM
+library_table_new INNER JOIN categories ON library_table_new.category_id = categories.id GROUP BY categories.category_name ORDER by sum_page DESC;
+
+/*Вивести середню вартість книг по темі 'Використання ПК' і категорії 'Linux'.*/
+ SELECT AVG(library_table_new.price), topics.topic_name, categories.category_name FROM 
+ library_table_new INNER JOIN categories INNER JOIN topics ON 
+ library_table_new.topic_id= topics.id AND library_table_new.category_id = categories.id 
+ WHERE topics.id = 2 AND categories.id = 10;
+ 
+ /*Вивести всі дані універсального відношення. Використовувати внутрішнє з'єднання, застосовуючи where.*/
+ SELECT library_table_new.*, publishers.publisher_name, categories.category_name, topics.topic_name, forms.book_form FROM library_table_new, publishers, categories, topics, forms 
+ WHERE  library_table_new.publisher_id= publishers.id AND library_table_new.form_id = forms.id AND library_table_new.topic_id= topics.id AND library_table_new.category_id= categories.id;
+ 
+ /*Вивести всі дані універсального відношення. Використовувати внутрішнє з'єднання, застосовуючи inner join.*/
+ SELECT topics.topic_name, categories.category_name, library_table_new.*, publishers.publisher_name FROM 
+topics INNER JOIN categories INNER JOIN library_table_new INNER JOIN publishers 
+ON library_table_new.topic_id = topics.id AND library_table_new.category_id= categories.id AND library_table_new.publisher_id = publishers.id; 
+
+ /* Вивести всі дані універсального відношення. Використовувати зовнішнє з'єднання, застосовуючи left join / rigth join.*/
+SELECT topics.topic_name, categories.category_name, forms.book_form, library_table_new.*, publishers.publisher_name FROM 
+library_table_new LEFT JOIN categories ON library_table_new.category_id= categories.id 
+LEFT JOIN publishers ON library_table_new.publisher_id= publishers.id 
+LEFT JOIN topics ON library_table_new.topic_id= topics.id
+LEFT JOIN forms ON library_table_new.form_id = forms.id; 
+
+SELECT topics.topic_name, categories.category_name, forms.book_form, library_table_new.*, publishers.publisher_name FROM 
+library_table_new RIGHT JOIN categories ON library_table_new.category_id= categories.id 
+RIGHT JOIN publishers ON library_table_new.publisher_id= publishers.id 
+RIGHT JOIN topics ON library_table_new.topic_id= topics.id
+RIGHT JOIN forms ON library_table_new.form_id = forms.id; 
+
+/* Вивести пари книг, що мають однакову кількість сторінок. Використовувати само об’єднання і аліаси (self join).*/
+SELECT A.name, B.name  FROM library_table_new A JOIN library_table_new B ON A.price=B.price;
+
+/*Вивести тріади книг, що мають однакову ціну. Використовувати самооб'єднання і аліаси (self join).*/
+SELECT A.name, B.name, C.name  FROM library_table_new A JOIN library_table_new B JOIN library_table_new C ON A.price=B.price AND A.price=C.price;
+/* Вивести всі книги категорії 'C ++'. Використовувати підзапити (subquery).*/
+SELECT library_table_new.* FROM library_table_new
+WHERE category_id=(SELECT categories.id FROM categories WHERE categories.category_name  LIKE '%C++%');
+
+/*Вивести книги видавництва 'BHV', видані після 2000 р Використовувати підзапити (subquery).*/
+SELECT library_table_new.* FROM library_table_new
+WHERE publisher_id=(SELECT publishers.id FROM publishers WHERE publishers.publisher_name LIKE '%BNV%') AND 
+YEAR(publish_date) >=2000;
+
+/*Вивести список видавництв, у яких розмір книг перевищує 400 сторінок. Використовувати пов'язані підзапити (correlated subquery).
+SELECT publisher_id FROM library_table_new p1 WHERE 
+(SELECT MIN(p2.pages) AS minimum FROM library_table_new p2
+WHERE p1.publisher_id=p2.publisher_id)
+AND minimum>=400;*/
+/*Вивести список категорій в яких більше 3-х книг. Використовувати пов'язані підзапити (correlated subquery).*/
+SELECT category_name FROM categories WHERE
+(SELECT COUNT(*) FROM library_table_new WHERE 
+library_table_new.category_id=categories.id)>3;
+/*Вивести список книг видавництва 'BHV', якщо в списку є хоча б одна книга цього видавництва. Використовувати exists.*/
+SELECT * FROM library_table_new 
+WHERE EXISTS
+(SELECT * FROM publishers WHERE publishers.publisher_name LIKE '%BHV%' AND library_table_new.publisher_id=publishers.id);
+/* Вивести список книг видавництва 'BHV', якщо в списку немає жодної книги цього видавництва. Використовувати not exists.*/
+SELECT * FROM library_table_new 
+WHERE NOT EXISTS
+(SELECT * FROM publishers WHERE publishers.publisher_name LIKE '%BHV%' AND library_table_new.publisher_id=publishers.id)
+AND publisher_id= (SELECT publishers.id FROM publishers WHERE publishers.publisher_name LIKE '%BHV%');
+/*  Вивести відсортований загальний список назв тем і категорій. Використовувати union.*/
+SELECT * FROM topics
+UNION SELECT * FROM categories

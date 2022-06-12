@@ -1,0 +1,56 @@
+/*Вивести книги у яких не введена ціна або ціна дорівнює 0*/
+SELECT * FROM library_table WHERE (price IS NULL) OR (price= 0);
+
+/*Вивести книги у яких введена ціна, але не введений тираж*/
+SELECT * FROM library_table WHERE (price IS NOT NULL) AND (circulation IS NULL);
+
+/* Вивести книги, про дату видання яких нічого не відомо*/
+SELECT * FROM library_table WHERE publish_date IS NULL;
+
+/*Вивести книги, з дня видання яких пройшло не більше року.*/
+SELECT * FROM library_table WHERE YEAR(CURRENT_DATE) - YEAR(publish_date) < 5;
+
+/*Вивести список книг-новинок, відсортованих за зростанням ціни*/
+SELECT * FROM library_table WHERE new=1 ORDER BY price;
+
+/*Вивести список книг з числом сторінок від 300 до 400, відсортованих в зворотному алфавітному порядку назв*/
+SELECT * FROM library_table WHERE pages BETWEEN 300 AND 400 ORDER BY name DESC;
+
+/*Вивести список книг з ціною від 20 до 40, відсортованих за спаданням дати*/
+SELECT * FROM library_table WHERE price BETWEEN 20 AND 40 ORDER BY publish_date DESC;
+
+/*Вивести список книг, відсортованих в алфавітному порядку назв і ціною по спадаючій*/
+SELECT * FROM library_table ORDER BY name ASC, price DESC;
+
+/*Вивести книги, у яких ціна однієї сторінки < 10 копійок.*/
+SELECT * FROM library_table WHERE (price / pages) < 0.10;
+
+/*Вивести значення наступних колонок: число символів в назві, перші 20 символів назви великими літерами*/
+SELECT UPPER(LEFT(name, 20)) AS name, LENGTH(name) AS num FROM library_table;
+
+/*Вивести значення наступних колонок: перші 10 і останні 10 символів назви прописними буквами, розділені '...'*/
+SELECT CONCAT(LEFT(name, 10),'...', RIGHT(name, 10)) AS name FROM library_table;
+
+/*Вивести значення наступних колонок: назва, дата, день, місяць, рік*/
+SELECT name, publish_date, DAY(publish_date), MONTH(publish_date), YEAR(publish_date) FROM library_table;
+
+/*Вивести значення наступних колонок: назва, дата, дата в форматі 'dd / mm / yyyy'*/
+SELECT name, publish_date, CONCAT(DAY(publish_date), '/', MONTH(publish_date),'/', YEAR(publish_date)) AS DATEE FROM library_table;
+
+/* Вивести значення наступних колонок: код, ціна, ціна в грн., ціна в євро, ціна в руб.*/
+SELECT codeNum, price, price*29.54 AS UAN, price*0.93 AS EUR, price*60.6 FROM library_table;
+
+/* Вивести значення наступних колонок: код, ціна, ціна в грн. без копійок, ціна без копійок округлена*/
+SELECT codeNum, price, price*29.54 AS UAN, TRUNCATE(price*29.54, 0) AS UAN1, ROUND(price*29.54) AS UAN2 FROM library_table;
+
+/* Додати інформацію про нову книгу (всі колонки)*/
+INSERT INTO library_table(num, codeNum, new, name, price, publisher, pages, form, publish_date, circulation, topic, category) VALUES(432, 3322, 1, 'Математика та комбінаторика', 12, 'Херсонський державний університет', 130, '70x100/16', '2020-02-21', 3000, 'Математичні приклади комбінаторики', 'інші книги');
+
+/* Видалити книги, видані до 1990 року*/
+DELETE FROM library_table WHERE YEAR(publish_date)<1990;
+
+/*Проставити поточну дату для тих книг, у яких дата видання відсутня*/
+UPDATE library_table SET publish_date= CURRENT_DATE WHERE publish_date IS NULL;
+
+/*Установити ознаку новинка для книг виданих після 2005 року*/
+UPDATE library_table SET new=1 WHERE YEAR(publish_date)>2005;

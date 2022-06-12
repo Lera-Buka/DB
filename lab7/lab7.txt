@@ -1,0 +1,92 @@
+/*Вивести значення наступних колонок: назва книги, ціна, назва видавництва, формат.
+CREATE PROCEDURE book_data()
+SELECT library_table_new.name, library_table_new.price, publishers.publisher_name, forms.book_form
+FROM library_table_new INNER JOIN publishers INNER JOIN forms
+ON library_table_new.publisher_id=publishers.id AND library_table_new.form_id=forms.id;*/
+
+CALL book_data();
+ /*Вивести значення наступних колонок: тема, категорія, назва книги, назва видавництва. Фільтр по темам і категоріям.
+CREATE PROCEDURE book_data1()
+SELECT library_table_new.name, topics.topic_name, publishers.publisher_name, categories.category_name
+FROM library_table_new INNER JOIN publishers INNER JOIN topics INNER JOIN categories
+ON library_table_new.publisher_id=publishers.id AND library_table_new.topic_id=topics.id AND library_table_new.category_id= categories.id;*/
+CALL book_data1();
+CREATE PROCEDURE book_data2(id_pub INT, year_n INT)
+SELECT * FROM library_table_new
+WHERE library_table_new.publisher_id=id_pub and year(library_table_new.publish_date)>year_n;
+CALL book_data2(3, 2000);
+/* Вивести загальну кількість сторінок по кожній назві категорії. Фільтр по спадаючій / зростанню кількості сторінок.
+CREATE PROCEDURE book_data3()
+SELECT SUM(pages) AS s_page, categories.category_name FROM library_table_new JOIN categories
+ON library_table_new.category_id=categories.id
+GROUP BY categories.category_name
+ORDER BY s_page;
+CALL book_data3();
+*/
+/* Вивести середню вартість книг по темі 'Використання ПК' і категорії 'Linux'.*/
+CREATE PROCEDURE book_data4(topic_id int, category_id int, OUT counter int)
+SELECT AVG(library_table_new.price) INTO counter FROM library_table_new
+WHERE library_table_new.topic_id = topic_id AND library_table_new.category_id= category_id;
+CALL book_data4(2, 3, @counter);
+SELECT @counter as avg_count;
+/* Вивести всі дані універсального відношення.*/
+CREATE PROCEDURE book_data5()
+SELECT library_table_new.*, categories.category_name, forms.book_form, topics.topic_name, publishers.publisher_name 
+FROM library_table_new JOIN categories JOIN forms JOIN topics JOIN publishers
+ON library_table_new.category_id=categories.id AND library_table_new.form_id=forms.id 
+AND library_table_new.topic_id=topics.id AND library_table_new.publisher_id=publishers.id;
+CALL book_data5();
+/* Вивести пари книг, що мають однакову кількість сторінок.*/
+CREATE PROCEDURE book_data6()
+ SELECT b1.name, b2.name
+    FROM
+        library_table_new b1
+    JOIN library_table_new b2 ON
+        b1.pages = b2.pages AND b1.name != b2.name ;
+CALL book_data6();
+/*  Вивести тріади книг, що мають однакову ціну.*/
+CREATE PROCEDURE book_data7()
+ SELECT b1.name, b2.name, b3.name
+    FROM
+        library_table_new b1
+    JOIN library_table_new b2 JOIN library_table_new b3 ON
+        b1.pages = b2.pages AND b1.name != b2.name AND b1.pages= b3.pages AND b1.name!=b3.name  AND b2.name!= b3.name;
+CALL book_data7();
+/*Вивести всі книги категорії 'C ++'.*/
+CREATE PROCEDURE book_data8(category_id int)
+SELECT library_table_new.*, categories.category_name FROM
+library_table_new JOIN categories on 
+library_table_new.category_id=categories.id
+WHERE library_table_new.category_id = category_id;
+CALL book_data8(6);
+/*Вивести список видавництв, у яких розмір книг перевищує 400 сторінок.*/
+CREATE PROCEDURE book_data9(pages_lim int)
+SELECT library_table_new.name, publishers.publisher_name from 
+library_table_new JOIN publishers
+WHERE (SELECT MIN(library_table_new.pages) FROM library_table_new WHERE
+      library_table_new.publisher_id= publishers.id)>pages_lim;
+CALL book_data9(400);
+/*Вивести список категорій за якими більше 3-х книг.*/
+CREATE PROCEDURE book_data10(lim_count int)
+SELECT library_table_new.name, categories.category_name FROM
+library_table_new JOIN categories ON library_table_new.category_id=categories.id
+WHERE (SELECT COUNT(categories.category_name) FROM categories)>=lim_count;
+CALL book_data10(3);
+/* Вивести список книг видавництва 'BHV', якщо в списку є хоча б одна книга цього видавництва.*/
+CREATE PROCEDURE book_data11()
+SELECT * FROM library_table_new 
+WHERE EXISTS
+(SELECT * FROM publishers WHERE publishers.publisher_name LIKE '%BHV%' AND library_table_new.publisher_id=publishers.id);
+CALL book_data11();
+/*  Вивести список книг видавництва 'BHV', якщо в списку немає жодної книги цього видавництва.*/
+CREATE PROCEDURE book_data12()
+SELECT * FROM library_table_new 
+WHERE NOT EXISTS
+(SELECT * FROM publishers WHERE publishers.publisher_name LIKE '%BHV%' AND library_table_new.publisher_id=publishers.id)
+AND publisher_id= (SELECT publishers.id FROM publishers WHERE publishers.publisher_name LIKE '%BHV%');
+CALL book_data12();
+/*Вивести відсортоване загальний список назв тем і категорій.*/
+CREATE PROCEDURE book_data13()
+(SELECT * FROM topics) union 
+(SELECT * FROM categories);
+CALL book_data13();

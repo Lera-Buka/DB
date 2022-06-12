@@ -1,0 +1,58 @@
+/* Вивести статистику: загальна кількість всіх книг, їх вартість, їх середню вартість, мінімальну і максимальну ціну*/
+SELECT COUNT(name) 	as amount, SUM(price) as whole_price, AVG(price) AS average, MIN(price) AS min_price, MAX(price) as max_price FROM library_table;
+
+/* Вивести загальну кількість всіх книг без урахування книг з непроставленою ціною*/
+SELECT COUNT(name) AS amount FROM library_table WHERE price IS NOT NULL;
+
+/* Вивести статистику (див. 1) для книг новинка / не новинка*/
+SELECT COUNT(name) 	as amount, SUM(price) as whole_price, AVG(price) AS average, MIN(price) AS min_price, MAX(price) as max_price, new as is_new FROM library_table GROUP BY new;
+
+/*Вивести статистику (див. 1) для книг за кожним роком видання*/
+SELECT COUNT(name) 	as amount, SUM(price) as whole_price, AVG(price) AS average, MIN(price) AS min_price, MAX(price) as max_price, Year(publish_date) as publishing FROM library_table GROUP BY YEAR(publish_date);
+
+/*Змінити п.4, виключивши з статистики книги з ціною від 10 до 20*/
+SELECT COUNT(name) 	as amount, SUM(price) as whole_price, AVG(price) AS average, MIN(price) AS min_price, MAX(price) as max_price, Year(publish_date) as publishing FROM library_table WHERE NOT price BETWEEN 10 AND 20 GROUP BY YEAR(publish_date);
+
+/*Змінити п.4. Відсортувати статистику по спадаючій кількості.*/
+SELECT COUNT(name) 	as amount, SUM(price) as whole_price, AVG(price) AS average, MIN(price) AS min_price, MAX(price) as max_price, Year(publish_date) as publishing FROM library_table GROUP BY YEAR(publish_date) ORDER BY amount DESC;
+
+/*Коди не можуть повторюватися, тому що вони є ключем*/
+
+/* Вивести статистику: загальна кількість і вартість книг по першій букві її назви*/
+SELECT COUNT(name), SUM(price) FROM library_table GROUP BY LEFT(name, 1);
+
+/* Змінити п. 8, виключивши з статистики назви що починаються з англ. букви або з цифри*/
+SELECT COUNT(name), SUM(price) FROM library_table WHERE name>= 'А' GROUP BY LEFT(name, 1);
+
+/* Змінити п. 9 так щоб до складу статистики потрапили дані з роками більшими за 2000.*/
+SELECT COUNT(name), SUM(price) FROM library_table WHERE name>= 'А' AND YEAR(publish_date)> 2000 GROUP BY LEFT(name, 1);
+
+/*  Змінити п. 10. Відсортувати статистику по спадаючій перших букв назви.*/
+SELECT LEFT(name, 1) AS FIRST_LETTER, COUNT(name), SUM(price) FROM library_table WHERE name>= 'А' AND YEAR(publish_date)> 2000  GROUP BY FIRST_LETTER ORDER BY FIRST_LETTER DESC;
+
+/*  Вивести статистику (див. 1) по кожному місяцю кожного року.*/
+SELECT COUNT(name) 	as amount, SUM(price) as whole_price, AVG(price) AS average, MIN(price) AS min_price, MAX(price) as max_price FROM library_table GROUP BY MONTH(publish_date);
+
+/*Змінити п. 12 так щоб до складу статистики не увійшли дані з незаповненими датами.*/
+SELECT COUNT(name) 	as amount, SUM(price) as whole_price, AVG(price) AS average, MIN(price) AS min_price, MAX(price) as max_price FROM library_table WHERE publish_date IS NOT NULL GROUP BY MONTH(publish_date);
+
+/*Змінити п. 12. Фільтр по спадаючій року і зростанню місяця.*/
+SELECT YEAR(publish_date) AS PUB_Y, MONTH(publish_date) AS PUB_M, COUNT(name) 	as amount, SUM(price) as whole_price, AVG(price) AS average, MIN(price) AS min_price, MAX(price) as max_price FROM library_table GROUP BY MONTH(publish_date), YEAR(publish_date) ORDER BY PUB_Y DESC, PUB_M ASC;
+
+/* Вивести статистику для книг новинка / не новинка: загальна ціна, загальна ціна в грн. / Євро / руб. Колонкам запиту дати назви за змістом..*/
+SELECT SUM(price) AS SUM_PRICE, SUM(price*29.20) AS SUM_UAN, SUM(price*0.91) AS SUM_EUR, SUM(price*61.10) AS SUM_RUB FROM library_table GROUP BY new;
+
+/*Змінити п. 15 так щоб виводилася округлена до цілого числа (дол. / Грн. / Євро / руб.) Ціна..*/
+SELECT ROUND(SUM(price), 0) AS SUM_PRICE, ROUND(SUM(price*29.20), 0) AS SUM_UAN, ROUND(SUM(price*0.91), 0) AS SUM_EUR, ROUND(SUM(price*61.10), 0) AS SUM_RUB FROM library_table GROUP BY new;
+
+/*  Вивести статистику (див. 1) по видавництвах.*/
+SELECT publisher AS PUB_NAME, COUNT(name) 	as amount, SUM(price) as whole_price, AVG(price) AS average, MIN(price) AS min_price, MAX(price) as max_price FROM library_table GROUP BY publisher;
+
+/* Вивести статистику (див. 1) за темами і видавництвами. Фільтр по видавництвам.*/
+SELECT publisher AS PUB_NAME, topic, COUNT(name) 	as amount, SUM(price) as whole_price, AVG(price) AS average, MIN(price) AS min_price, MAX(price) as max_price FROM library_table GROUP BY publisher, topic ORDER BY publisher ASC, topic ASC;
+ 
+ /*Вивести статистику (див. 1) за категоріями, темами і видавництвами. Фільтр по видавництвам, темах, категоріям.*/
+ SELECT publisher AS PUB_NAME, topic, category, COUNT(name) 	as amount, SUM(price) as whole_price, AVG(price) AS average, MIN(price) AS min_price, MAX(price) as max_price FROM library_table GROUP BY category, topic, publisher ORDER BY publisher ASC, topic ASC, category ASC;
+
+/*Вивести список видавництв, у яких округлена до цілого ціна однієї сторінки більше 10 копійок.*/
+SELECT publisher FROM library_table WHERE ROUND((price*29.10)/pages)>= 0.1 GROUP BY publisher;

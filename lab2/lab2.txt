@@ -1,0 +1,67 @@
+/*Вивести значення наступних колонок: номер, код, новинка, назва, ціна, сторінки*/
+SELECT num, codeNum, new, name, price, pages
+FROM library_table;
+
+/* Вивести значення всіх колонок*/
+SELECT * FROM library_table;
+
+/*Вивести значення колонок в наступному порядку: код, назва, новинка, сторінки, ціна, номер*/
+SELECT codeNum, name, new, pages, price, num
+FROM library_table;
+
+/*Вивести значення всіх колонок 10 перших рядків*/
+SELECT *FROM library_table LIMIT 10;
+
+/* Вивести значення колонки код без повторення однакових кодів*/
+SELECT * FROM library_table GROUP BY codeNum; 
+
+/*Вивести всі книги новинки*/
+SELECT * FROM library_table WHERE new=1;
+
+/*Вивести всі книги новинки з ціною від 20 до 30*/
+SELECT * FROM library_table WHERE (new=1) AND (price BETWEEN 20 AND 30);
+
+/*Вивести всі книги новинки з ціною менше 20 і більше 30*/
+SELECT * FROM library_table WHERE (new=1) AND (price>30 OR price<20);
+
+/* Вивести всі книги з кількістю сторінок від 300 до 400 і з ціною більше 20 і менше 30*/
+SELECT * FROM library_table WHERE (pages  BETWEEN 300 AND 400) AND (price BETWEEN 20 AND  30);
+
+/* Вивести всі книги видані взимку 2000 року*/
+SELECT * FROM library_table WHERE publish_date BETWEEN '2000-12-01' AND '2001-02-28';
+
+/*Вивести книги зі значеннями кодів 5110, 5141, 4985, 4241*/
+SELECT * FROM library_table
+WHERE codeNum = 5110
+OR codeNum = 5141
+OR codeNum = 4985
+OR codeNum = 4241;
+
+/* Вивести книги видані в 1999, 2001, 2003, 2005 р*/
+SELECT * FROM library_table
+WHERE YEAR(publish_date) = 1999
+OR    YEAR(publish_date) = 2001
+OR    YEAR(publish_date) = 2003
+OR    YEAR(publish_date) = 2005;
+
+/*Вивести книги назви яких починаються на літери А-К*/
+SELECT * FROM library_table WHERE (name LIKE 'А%') OR (name LIKE 'К%');
+
+/*Вивести книги назви яких починаються на літери "Ап", видані в 2000 році з ціною до 20*/
+SELECT * FROM library_table WHERE (name LIKE 'Ап%') AND (YEAR(publish_date) = 2000) AND (price<20);
+
+/*Вивести книги назви яких починаються на літери "Ап", закінчуються на "е", видані в першій половині 2000 року*/
+SELECT * FROM library_table 
+WHERE (name LIKE 'Ап%е') AND (publish_date BETWEEN '2000-01-01' AND '2000-6-30'); 
+
+/*Вивести книги, в назвах яких є слово Microsoft, але немає слова Windows*/
+SELECT * FROM library_table WHERE (name LIKE '%Microsoft%') AND (NOT name LIKE '%Windows%');
+
+/*Вивести книги, в назвах яких присутня як мінімум одна цифра.*/
+SELECT * FROM library_table WHERE name REGEXP '[0-9]';
+
+/*Вивести книги, в назвах яких присутні не менше трьох цифр.*/
+SELECT *FROM library_table WHERE name REGEXP '([0-9].*){3}';
+
+/*Вивести книги, в назвах яких присутній рівно п'ять цифр.*/
+SELECT * FROM library_table WHERE (name REGEXP '([0-9].*){5}') AND (name NOT REGEXP '([0-9].*){6}');
