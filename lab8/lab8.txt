@@ -1,0 +1,118 @@
+/* Кількість тем може бути в діапазоні від 5 до 10.*/
+DELIMITER $$
+CREATE TRIGGER trig1 BEFORE INSERT on topics
+FOR EACH ROW
+ IF (SELECT COUNT(*) FROM topics)> 10
+ THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Кількість тем більше 10';
+ ELSEIF (SELECT COUNT(*) FROM topics)< 5
+ THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Кількість тем менша за 5';
+ END IF;
+$$ 
+DELIMITER ;
+
+/*Новинкою може бути тільки книга видана в поточному році.*/
+DELIMITER $$
+CREATE TRIGGER trig2 BEFORE INSERT ON library_table_new
+FOR EACH ROW
+IF(SELECT library_table_new.new=1 AND year(library_table_new.publish_date) != year(NOW()))
+THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Новинки можуть бути видані лише в поточному році';
+END IF;
+$$
+DELIMITER ;
+
+/* Книга з кількістю сторінок до 100 не може коштувати більше 10 $, до 200 - 20 $, до 300 - 30 $.*/
+DELIMITER $$
+CREATE TRIGGER trig3 BEFORE INSERT ON library_table_new 
+FOR EACH ROW
+IF((library_table_new.pages< 100 AND library_table_new.price>10)
+  OR (library_table_new.pages< 200 AND library_table_new.price>20)
+  OR (library_table_new.pages< 300 AND library_table_new.price>30))
+  THEN
+  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Кількість більша 10';
+   END IF;
+$$
+DELIMITER ;
+
+/*Видавництво "BHV" не випускає книги накладом меншим 5000, а видавництво Diasoft - 10000.*/
+DELIMITER $$
+CREATE TRIGGER trig4 BEFORE INSERT ON library_table_new
+FOR EACH ROW
+IF (library_table_new.publisher_id = 3 AND library_table_new.circulation< 5000)
+THEN SET @err2 = 'not excists';
+ELSEIF (library_table_new.publisher_id= 1 AND library_table_new.circulation< 10000)
+THEN SET @err2 = 'not excists';
+END IF;
+$$
+DELIMITER ;
+   
+/*Книги з однаковим кодом повинні мати однакові дані.*/
+DELIMITER $$
+CREATE TRIGGER trig5 BEFORE INSERT ON library_table_new
+FOR EACH ROW
+BEGIN
+ SELECT COUNT(*) INTO @counter
+    FROM library_table_new
+    WHERE library_table_new.codeNum = NEW.codeNum AND (
+ -- n != NEW.n                          OR
+is_new != library_table_new.new OR
+book_name != library_table_new.name OR
+price != library_table_new.price OR
+publisher_id != library_table_new.publisher_id OR
+pages_count != library_table_new.pages OR
+format != library_table_new.form_id OR
+date != library_table_new.publish_date OR
+circulation != library_table_new.circulation OR
+theme != library_table_new.topic_id OR
+category != library_table_new.category_id);
+IF (counter != 0) THEN SET @err2 = 'no';
+END IF;
+END;
+$$
+DELIMITER ;
+
+/*При спробі видалення книги видається інформація про кількість видалених рядків. Якщо користувач не "dbo", то видалення забороняється.*/
+DELIMITER $$
+CREATE TRIGGER trig6 BEFORE DELETE ON library_table_new 
+FOR EACH ROW 
+BEGIN
+IF (CURRENT_USER != 'root') THEN 
+        SET @err2 = 'not allowed to delete';
+ELSE SET @counter = @counter + 1;
+END IF;
+END 
+$$
+DELIMITER ;
+
+/*Користувач "dbo" не має права змінювати ціну книги.*/
+DELIMITER $$
+CREATE TRIGGER trig7 BEFORE UPDATE ON library_table_new
+FOR EACH ROW
+BEGIN
+IF (CURRENT_USER = 'root') AND library_table_new.price != library_table_new.price THEN 
+SET @err2 = 'root can\'t change price';
+END if;
+END;
+$$
+DELIMITER ;
+
+/* Видавництва ДМК і Еком підручники не видають.*/
+DELIMITER $$ 
+CREATE TRIGGER trig8 BEFORE INSERT ON library_table_new 
+FOR EACH ROW 
+BEGIN 
+IF (library_table_new.publisher_id in (6, 7) AND library_table_new.category_id = 8)
+THEN SET @err2 = ' Видавництва ДМК і Еком підручники не видають.';
+END IF;
+END;
+$$
+DELIMITER ;
+
+/*Видавництво BHV не випускає книги формату 60х88 / 16.*/
+DELIMITER $$
+CREATE TRIGGER trig9 BEFORE INSERT ON library_table_new
+FOR EACH ROW 
+IF (library_table_new.publisher_id = 3 AND library_table_new.form_id = 5)
+THEN SET @err2 = 'Видавництво не має такого формату';
+END IF;
+$$
+DELIMITER ;
